@@ -30,12 +30,14 @@ import {
 } from "@tanstack/react-table";
 import { FC, useMemo, useReducer, useState } from "react";
 
-type Props<T extends RowData = RowData> = {
+type Props<T extends RowData = any> = {
   rows: T[];
   columns: ColumnDef<T>[];
 };
-
-export const DataGrid: FC<Props> = ({ rows, columns: _columns }) => {
+export const DataGrid = <T extends RowData>({
+  rows,
+  columns: _columns,
+}: Props<T>) => {
   const rerender = useReducer(() => ({}), {})[1];
   const columns = useMemo(() => _columns, []);
   return <CollapsibleTable rows={rows} columns={columns} />;
@@ -129,7 +131,7 @@ const CollapsibleTable = <T extends RowData>({ rows, columns }: Props<T>) => {
   );
 };
 
-type RowProps<T extends RowData = RowData> = {
+type RowProps<T extends RowData = any> = {
   row: RowType<T>;
   expandedId: string | undefined;
   setExpandedId: (rowId: string) => void;
