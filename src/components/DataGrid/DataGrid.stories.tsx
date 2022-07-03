@@ -1,5 +1,6 @@
 import { ComponentMeta, ComponentStory } from "@storybook/react";
 import { DataGrid } from "./DataGrid";
+import { SampleTable } from "./SampleTable";
 
 export default {
   title: "Component/DataGrid",
@@ -8,7 +9,7 @@ export default {
 } as ComponentMeta<typeof DataGrid>;
 
 const Template: ComponentStory<typeof DataGrid> = (args) => (
-  <DataGrid {...args} />
+  <SampleTable {...args} />
 );
 
-export const $DataGrid = Template.bind({});
+export const $Sample = Template.bind({});
