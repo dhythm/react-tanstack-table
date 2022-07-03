@@ -285,8 +285,6 @@ export const SampleTable: FC<Props> = () => {
       <pre>{JSON.stringify(expanded, null, 2)}</pre>
     </div>
   );
-
-  return null;
 };
 
 function Filter({ column, table }: { column: Column<any>; table: Table<any> }) {

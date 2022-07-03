@@ -9,7 +9,7 @@ export default {
 } as ComponentMeta<typeof DataGrid>;
 
 const Template: ComponentStory<typeof DataGrid> = (args) => (
-  <SampleTable {...args} />
+  <DataGrid {...args} />
 );
 
-export const $Sample = Template.bind({});
+export const $DataGrid = Template.bind({});

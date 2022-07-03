@@ -19,3 +19,11 @@ Install tanstack
 ```sh
 npm install @tanstack/react-table
 ```
+
+Install Mui and Chakra
+
+```sh
+npm install @mui/material @emotion/react @emotion/styled
+npm i @mui/icons-material
+npm i @chakra-ui/react @emotion/react @emotion/styled framer-motion
+```
