@@ -1,14 +1,19 @@
-import { ComponentMeta, ComponentStory } from "@storybook/react";
-import { SampleTable } from "./SampleTable";
+import { ComponentStory, Meta } from "@storybook/react";
+import { ExpandableTable } from "./ExpandableTable";
+import { SortableTable } from "./SortableTable";
 
 export default {
   title: "Component/SampleTable",
-  component: SampleTable,
   argTypes: {},
-} as ComponentMeta<typeof SampleTable>;
+} as Meta;
 
-const Template: ComponentStory<typeof SampleTable> = (args) => (
-  <SampleTable {...args} />
+const ExpandableTableTemplate: ComponentStory<typeof ExpandableTable> = (
+  args
+) => <ExpandableTable {...args} />;
+
+export const $Expandable = ExpandableTableTemplate.bind({});
+
+const SortableTableTemplate: ComponentStory<typeof SortableTable> = (args) => (
+  <SortableTable {...args} />
 );
-
-export const $Sample = Template.bind({});
+export const $Sortable = SortableTableTemplate.bind({});
