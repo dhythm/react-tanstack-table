@@ -18,46 +18,47 @@ import {
 } from "@mui/material";
 import {
   ColumnDef,
-  ExpandedState,
   flexRender,
   getCoreRowModel,
-  getExpandedRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   Row as RowType,
+  RowData,
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { ComponentProps, FC, useMemo, useReducer, useState } from "react";
+import { FC, useMemo, useReducer, useState } from "react";
 
-type Props<T extends { name: string } = any> = Pick<
-  ComponentProps<typeof CollapsibleTable>,
-  "rows" | "columns"
->;
+type Props<T extends RowData = RowData> = {
+  rows: T[];
+  columns: ColumnDef<T>[];
+};
+
 export const DataGrid: FC<Props> = ({ rows, columns: _columns }) => {
   const rerender = useReducer(() => ({}), {})[1];
   const columns = useMemo(() => _columns, []);
   return <CollapsibleTable rows={rows} columns={columns} />;
 };
 
-const CollapsibleTable: FC<TableProps> = ({ rows, columns }) => {
-  const [expanded, setExpanded] = useState<ExpandedState>({});
+const CollapsibleTable = <T extends RowData>({ rows, columns }: Props<T>) => {
+  const [expandedId, setExpandedId] = useState<string | undefined>(undefined);
+  //   const [expanded, setExpanded] = useState<ExpandedState>({});
   const [sorting, setSorting] = useState<SortingState>([]);
-  const table = useReactTable({
+  const table = useReactTable<T>({
     data: rows,
     columns,
     state: {
       sorting,
-      expanded,
+      //   expanded,
     },
     onSortingChange: setSorting,
-    onExpandedChange: setExpanded,
-    getSubRows: (row) => row.subRows,
+    // onExpandedChange: setExpanded,
+    // getSubRows: (row) => row.subRows,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getExpandedRowModel: getExpandedRowModel(),
+    // getExpandedRowModel: getExpandedRowModel(),
     getSortedRowModel: getSortedRowModel(),
     debugTable: true,
   });
@@ -99,8 +100,18 @@ const CollapsibleTable: FC<TableProps> = ({ rows, columns }) => {
           </TableHead>
           <TableBody>
             {table.getRowModel().rows.map((row) => {
-              console.log({ row });
-              return <Row key={row.id} row={row} />;
+              return (
+                <Row
+                  key={row.id}
+                  row={row}
+                  expandedId={expandedId}
+                  setExpandedId={(rowId) =>
+                    setExpandedId((prev) =>
+                      prev !== rowId ? rowId : undefined
+                    )
+                  }
+                />
+              );
             })}
           </TableBody>
         </Table>
@@ -118,10 +129,13 @@ const CollapsibleTable: FC<TableProps> = ({ rows, columns }) => {
   );
 };
 
-type RowProps<T extends { name: string } = any> = { row: RowType<T> };
-const Row: FC<RowProps> = ({ row }) => {
-  const [open, setOpen] = useState(false);
-
+type RowProps<T extends RowData = RowData> = {
+  row: RowType<T>;
+  expandedId: string | undefined;
+  setExpandedId: (rowId: string) => void;
+} & CollapsedComponentProps<T>;
+const Row: FC<RowProps> = ({ row, expandedId, setExpandedId }) => {
+  const open = row.id === expandedId;
   return (
     <>
       <TableRow sx={{ "& > *": { borderBottom: "unset" } }}>
@@ -129,7 +143,7 @@ const Row: FC<RowProps> = ({ row }) => {
           <IconButton
             aria-label="expand row"
             size="small"
-            onClick={() => setOpen(!open)}
+            onClick={() => setExpandedId(row.id)}
           >
             {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
           </IconButton>
@@ -151,7 +165,10 @@ const Row: FC<RowProps> = ({ row }) => {
   );
 };
 
-const CollapsedComponent: FC<RowProps> = ({ row }) => (
+type CollapsedComponentProps<T extends RowData = RowData> = {
+  row: RowType<T>;
+};
+const CollapsedComponent: FC<CollapsedComponentProps> = ({ row }) => (
   <Box sx={{ margin: 1 }}>
     <Typography variant="h6" gutterBottom component="div">
       History
@@ -169,8 +186,3 @@ const CollapsedComponent: FC<RowProps> = ({ row }) => (
     </Table>
   </Box>
 );
-
-type TableProps<T extends { name: string } = any> = {
-  rows: RowType<T>[];
-  columns: ColumnDef<T>[];
-};
