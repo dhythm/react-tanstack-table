@@ -1,30 +1,45 @@
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import {
-  Box,
-  Collapse,
-  IconButton,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TablePagination,
-  TableRow,
-  Typography,
+    Box,
+    Collapse,
+    IconButton,
+    Paper,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TablePagination,
+    TableRow,
+    Typography
 } from "@mui/material";
-import { ChangeEvent, ComponentProps, FC, useReducer, useState } from "react";
+import {
+    ColumnDef,
+    ExpandedState,
+    flexRender,
+    getCoreRowModel,
+    getExpandedRowModel,
+    getFilteredRowModel,
+    getPaginationRowModel,
+    Row as RowType,
+    SortingState,
+    useReactTable
+} from "@tanstack/react-table";
+import { ComponentProps, FC, useMemo, useReducer, useState } from "react";
 
-type Props = Pick<ComponentProps<typeof CollapsibleTable>, "header" | "rows">;
-
-export const DataGrid: FC<Props> = ({ header, rows }) => {
+type Props<T extends { name: string } = any> = Pick<
+  ComponentProps<typeof CollapsibleTable>,
+  "rows" | "columns"
+>;
+export const DataGrid: FC<Props> = ({ rows, columns: _columns }) => {
   const rerender = useReducer(() => ({}), {})[1];
-  return <CollapsibleTable header={header} rows={rows} />;
+  const columns = useMemo(() => _columns, []);
+  return <CollapsibleTable rows={rows} columns={columns} />;
 };
 
-type RowProps<T extends { name: string } = any> = T;
-const Row: FC<{ row: RowProps }> = ({ row }) => {
+type RowProps<T extends { name: string } = any> = { row: RowType<T> };
+const Row: FC<RowProps> = ({ row }) => {
   const [open, setOpen] = useState(false);
 
   return (
@@ -39,13 +54,11 @@ const Row: FC<{ row: RowProps }> = ({ row }) => {
             {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
           </IconButton>
         </TableCell>
-        <TableCell component="th" scope="row">
-          {row.name}
-        </TableCell>
-        <TableCell align="right">{row.calories}</TableCell>
-        <TableCell align="right">{row.fat}</TableCell>
-        <TableCell align="right">{row.carbs}</TableCell>
-        <TableCell align="right">{row.protein}</TableCell>
+        {row.getVisibleCells().map((cell) => (
+          <TableCell key={cell.id}>
+            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+          </TableCell>
+        ))}
       </TableRow>
       <TableRow>
         <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
@@ -58,10 +71,7 @@ const Row: FC<{ row: RowProps }> = ({ row }) => {
   );
 };
 
-type CollapsedComponentProps<T extends { name: string } = any> = {
-  row: RowProps<T>;
-};
-const CollapsedComponent: FC<CollapsedComponentProps> = ({ row }) => (
+const CollapsedComponent: FC<RowProps> = ({ row }) => (
   <Box sx={{ margin: 1 }}>
     <Typography variant="h6" gutterBottom component="div">
       History
@@ -75,58 +85,68 @@ const CollapsedComponent: FC<CollapsedComponentProps> = ({ row }) => (
           <TableCell align="right">Total price ($)</TableCell>
         </TableRow>
       </TableHead>
-      <TableBody>
-        {row.history.map((historyRow) => (
-          <TableRow key={historyRow.date}>
-            <TableCell component="th" scope="row">
-              {historyRow.date}
-            </TableCell>
-            <TableCell>{historyRow.customerId}</TableCell>
-            <TableCell align="right">{historyRow.amount}</TableCell>
-            <TableCell align="right">
-              {Math.round(historyRow.amount * row.price * 100) / 100}
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
+      <TableBody></TableBody>
     </Table>
   </Box>
 );
 
-type Header = { name: string }[];
 type TableProps<T extends { name: string } = any> = {
-  header: Header;
-  rows: RowProps<T>[];
+  rows: RowType<T>[];
+  columns: ColumnDef<T>[];
 };
 
-const CollapsibleTable: FC<TableProps> = ({ header, rows }) => {
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+const CollapsibleTable: FC<TableProps> = ({ rows, columns }) => {
+  const [expanded, setExpanded] = useState<ExpandedState>({});
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const table = useReactTable({
+    data: rows,
+    columns,
+    state: {
+      expanded,
+      sorting,
+    },
+    onExpandedChange: setExpanded,
+    onSortingChange: setSorting,
+    getSubRows: (row) => row.subRows,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
+    manualExpanding: true,
+    debugTable: true,
+  });
 
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event: ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(+event.target.value);
-    setPage(0);
-  };
   return (
     <Paper>
       <TableContainer>
         <Table aria-label="collapsible table">
           <TableHead>
-            <TableRow>
-              <TableCell />
-              {header.map((element) => (
-                <TableCell>{element.name}</TableCell>
-              ))}
-            </TableRow>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                <TableCell />
+                {headerGroup.headers.map((header) => (
+                  <TableCell onClick={header.column.getToggleSortingHandler()}>
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
+                    {typeof header.column.getIsSorted() === "string" ? (
+                      header.column.getIsSorted() === "asc" ? (
+                        <KeyboardArrowUpIcon />
+                      ) : (
+                        <KeyboardArrowDownIcon />
+                      )
+                    ) : null}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
           </TableHead>
           <TableBody>
-            {rows.map((row) => (
-              <Row key={row.name} row={row} />
-            ))}
+            {table.getRowModel().rows.map((row) => {
+              console.log({ row });
+              return <Row key={row.id} row={row} />;
+            })}
           </TableBody>
         </Table>
       </TableContainer>
@@ -134,10 +154,10 @@ const CollapsibleTable: FC<TableProps> = ({ header, rows }) => {
         rowsPerPageOptions={[10, 25, 100]}
         component="div"
         count={rows.length}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
+        rowsPerPage={table.getState().pagination.pageSize}
+        page={table.getState().pagination.pageIndex}
+        onPageChange={(_, page) => table.setPageIndex(page)}
+        onRowsPerPageChange={(event) => table.setPageSize(+event.target.value)}
       />
     </Paper>
   );

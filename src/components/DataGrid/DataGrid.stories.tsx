@@ -8,16 +8,71 @@ export default {
 } as ComponentMeta<typeof DataGrid>;
 
 const Template: ComponentStory<typeof DataGrid> = (args) => (
-  <DataGrid header={header} rows={rows} />
+  <DataGrid
+    rows={[...rows, ...rows, ...rows, ...rows, ...rows]}
+    columns={[
+      {
+        header: "A",
+        columns: [
+          {
+            accessorFn: (row) => row.name,
+            id: "name",
+            cell: (info) => info.getValue(),
+            header: () => <span>Name</span>,
+            footer: (props) => props.column.id,
+          },
+          {
+            accessorFn: (row) => row.calories,
+            id: "calories",
+            cell: (info) => info.getValue(),
+            header: () => <span>Calories</span>,
+            footer: (props) => props.column.id,
+          },
+          {
+            accessorFn: (row) => row.fat,
+            id: "fat",
+            cell: (info) => info.getValue(),
+            header: () => <span>Fat</span>,
+            footer: (props) => props.column.id,
+          },
+          {
+            accessorFn: (row) => row.carbs,
+            id: "carbs",
+            cell: (info) => info.getValue(),
+            header: () => <span>Carbs</span>,
+            footer: (props) => props.column.id,
+          },
+          {
+            accessorFn: (row) => row.protein,
+            id: "protein",
+            cell: (info) => info.getValue(),
+            header: () => <span>Protein</span>,
+            footer: (props) => props.column.id,
+          },
+          //   {
+          //     accessorFn: (row) => row.price,
+          //     id: "price",
+          //     cell: (info) => info.getValue(),
+          //     header: () => <span>Price</span>,
+          //     footer: (props) => props.column.id,
+          //   },
+        ],
+      },
+      {
+        header: "Price",
+        columns: [
+          {
+            accessorFn: (row) => row.price,
+            id: "price",
+            cell: (info) => info.getValue(),
+            // header: () => <span>Price</span>,
+            // footer: (props) => props.column.id,
+          },
+        ],
+      },
+    ]}
+  />
 );
-
-const header = [
-  { name: "A" },
-  { name: "B" },
-  { name: "C" },
-  { name: "D" },
-  { name: "E" },
-];
 
 const rows = [
   {
