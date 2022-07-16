@@ -18,6 +18,7 @@ import {
 } from "@mui/material";
 import {
   ColumnDef,
+  ExpandedState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -44,18 +45,19 @@ export const DataGrid = <T extends RowData>({
 };
 
 const CollapsibleTable = <T extends RowData>({ rows, columns }: Props<T>) => {
-  const [expandedId, setExpandedId] = useState<string | undefined>(undefined);
-  //   const [expanded, setExpanded] = useState<ExpandedState>({});
+  const [expanded, setExpanded] = useState<ExpandedState>({});
   const [sorting, setSorting] = useState<SortingState>([]);
   const table = useReactTable<T>({
     data: rows,
     columns,
     state: {
       sorting,
-      //   expanded,
+      expanded,
     },
     onSortingChange: setSorting,
-    // onExpandedChange: setExpanded,
+    manualExpanding: true,
+    enableExpanding: true,
+    onExpandedChange: setExpanded,
     // getSubRows: (row) => row.subRows,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -64,6 +66,8 @@ const CollapsibleTable = <T extends RowData>({ rows, columns }: Props<T>) => {
     getSortedRowModel: getSortedRowModel(),
     debugTable: true,
   });
+
+  console.log({ expanded });
 
   return (
     <Paper>
@@ -106,12 +110,12 @@ const CollapsibleTable = <T extends RowData>({ rows, columns }: Props<T>) => {
                 <Row
                   key={row.id}
                   row={row}
-                  expandedId={expandedId}
-                  setExpandedId={(rowId) =>
-                    setExpandedId((prev) =>
-                      prev !== rowId ? rowId : undefined
-                    )
-                  }
+                  onClick={() => {
+                    if (!row.getIsExpanded()) {
+                      table.toggleAllRowsExpanded(false);
+                    }
+                    row.toggleExpanded(!row.getIsExpanded());
+                  }}
                 />
               );
             })}
@@ -133,20 +137,15 @@ const CollapsibleTable = <T extends RowData>({ rows, columns }: Props<T>) => {
 
 type RowProps<T extends RowData = any> = {
   row: RowType<T>;
-  expandedId: string | undefined;
-  setExpandedId: (rowId: string) => void;
+  onClick: () => void;
 } & CollapsedComponentProps<T>;
-const Row: FC<RowProps> = ({ row, expandedId, setExpandedId }) => {
-  const open = row.id === expandedId;
+const Row: FC<RowProps> = ({ row, onClick }) => {
+  const open = row.getIsExpanded();
   return (
     <>
       <TableRow sx={{ "& > *": { borderBottom: "unset" } }}>
         <TableCell>
-          <IconButton
-            aria-label="expand row"
-            size="small"
-            onClick={() => setExpandedId(row.id)}
-          >
+          <IconButton aria-label="expand row" size="small" onClick={onClick}>
             {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
           </IconButton>
         </TableCell>
